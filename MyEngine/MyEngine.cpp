@@ -8,10 +8,16 @@
 
 using namespace std;
 
-void cleanup(SDL_Window* win);
+struct SDLState {
+	SDL_Window* window;
+	SDL_Renderer* renderer;
+};
+
+void cleanup(SDLState &state);
 
 int main(int argc, char* argv[])
 {
+	SDLState state;
 	if(!SDL_Init(SDL_INIT_VIDEO))
 	{
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Failed to initialize SDL", nullptr);
@@ -19,13 +25,19 @@ int main(int argc, char* argv[])
 	}
 	int width = 800;
 	int height = 600;
-	SDL_Window* win = SDL_CreateWindow("MyEngine", width, height, 0);
-	if (!win) {
+	state.window = SDL_CreateWindow("MyEngine", width, height, 0);
+	if (!state.window) {
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Failed to create window", nullptr);
-		cleanup(win);
+		cleanup(state);
 		return 1;
 	}
 
+	state.renderer = SDL_CreateRenderer(state.window, nullptr);
+	if(!state.renderer) {
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Failed to create renderer", nullptr);
+		cleanup(state);
+		return 1;
+	}
 	bool running = true;
 	while (running) {
 
@@ -37,15 +49,19 @@ int main(int argc, char* argv[])
 				break;
 			}
 		}
-
+		//Perform drawing operations
+		SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+		SDL_RenderClear(state.renderer);
+		SDL_RenderPresent(state.renderer);
 	}
 
-	cleanup(win);
+	cleanup(state);
 	return 0;
 }
 
-void cleanup(SDL_Window* win)
+void cleanup(SDLState &state)
 {
-	SDL_DestroyWindow(win);
+	SDL_DestroyRenderer(state.renderer);
+	SDL_DestroyWindow(state.window);
 	SDL_Quit();
 }
